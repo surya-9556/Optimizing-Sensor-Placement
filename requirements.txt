@@ -6,3 +6,6 @@ torch
 scikit-learn
 flask
 openpyxl
+python-dotenv
+Flask-Bootstrap 
+Flask-SCSS

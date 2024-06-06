@@ -31,6 +31,8 @@ new 1.txt
 # .gitignore
 output.png
 Sensor_data/
+sensor_heatmaps/
+anomalies/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
