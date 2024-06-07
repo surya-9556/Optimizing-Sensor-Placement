@@ -33,6 +33,8 @@ output.png
 Sensor_data/
 sensor_heatmaps/
 anomalies/
+Compare/
+# *.avi
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
