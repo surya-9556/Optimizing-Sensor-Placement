@@ -1,6 +1,7 @@
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+import keras as ker
 
 class AnomalyDetection:
     
@@ -59,3 +60,29 @@ class AnomalyDetection:
         plot_histogram('Humidity', humidity_color)
         
         return sensor_data
+    
+    @staticmethod
+    def model(input_shape):
+        model = ker.models.Sequential([
+            ker.layers.Dense(128, activation='relu', input_shape=(input_shape,)),
+            ker.layers.Dense(128, activation='relu'),
+            ker.layers.Dense(64, activation='relu'),
+            ker.layers.Dense(64, activation='relu'),
+            ker.layers.Dense(32, activation='relu'),
+            ker.layers.Dense(1)
+        ])
+        model.compile(optimizer='adam', loss='mean_squared_error')
+        return model
+    
+    @staticmethod
+    def training_anomaly_model(X_train_scaled, y_train_temp, y_train_humidity, target):
+        if target == 'temperature':
+            y_train = y_train_temp
+        elif target == 'humidity':
+            y_train = y_train_humidity
+        else:
+            raise ValueError("Target must be 'temperature' or 'humidity'")
+
+        model = AnomalyDetection.model(X_train_scaled.shape[1])
+        model.fit(X_train_scaled, y_train, epochs=20, batch_size=64, validation_split=0.3)
+        return model

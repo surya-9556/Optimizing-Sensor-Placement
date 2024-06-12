@@ -39,18 +39,16 @@ class ExtractingFiles:
 
         for file in excel_files:
             print(f'Reading file: {file}')
-            # Read each sheet in the Excel file
             xls = pd.ExcelFile(file)
             for sheet_name in xls.sheet_names:
                 df = pd.read_excel(file, sheet_name=sheet_name)
                 extracted_df = ExtractingFiles.extract_data_from_sheet(df)
                 data_frames.append(extracted_df)
 
-        # Combine all DataFrames
         combined_data = pd.concat(data_frames, ignore_index=True)
 
-        # Apply the split_sensor_info function
         combined_data[['Sensor ID', 'Sensor Name']] = combined_data['Sensor Info'].apply(ExtractingFiles.split_sensor_info)
+        combined_data = combined_data.drop('Sensor Info',axis=1)
 
         return combined_data
     
