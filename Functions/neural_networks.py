@@ -48,6 +48,6 @@ class NeuralNetwork:
         X, y = self.create_sequences(feature_data, n_steps)
         input_shape = (X.shape[1],)
         model = self.build_model(input_shape)
-        model.fit(X, y, epochs=50, batch_size=32, validation_split=0.3)
+        model.fit(X, y, epochs=20, batch_size=32, validation_split=0.3)
         filled_data = self.fill_missing_values(data, model, feature_name, n_steps)
         return filled_data
