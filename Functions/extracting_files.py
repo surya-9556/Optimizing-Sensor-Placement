@@ -33,22 +33,31 @@ class ExtractingFiles:
         return pd.Series([parts[0], sensor_info])
     
     @staticmethod
-    def read_all_excel_files(directory):
-        excel_files = glob.glob(os.path.join(directory, '**', '*.xlsx*'), recursive=True)
+    def read_all_excel_files(file):
         data_frames = []
 
-        for file in excel_files:
-            print(f'Reading file: {file}')
+        if os.path.isdir(file):
+            excel_files = glob.glob(os.path.join(file, '**', '*.xlsx*'), recursive=True)
+
+            for excel_file in excel_files:
+                xls = pd.ExcelFile(excel_file)
+                for sheet_name in xls.sheet_names:
+                    df = pd.read_excel(xls, sheet_name=sheet_name)
+                    extracted_df = ExtractingFiles.extract_data_from_sheet(df)
+                    data_frames.append(extracted_df)
+        else:
             xls = pd.ExcelFile(file)
             for sheet_name in xls.sheet_names:
-                df = pd.read_excel(file, sheet_name=sheet_name)
+                df = pd.read_excel(xls, sheet_name=sheet_name)
                 extracted_df = ExtractingFiles.extract_data_from_sheet(df)
                 data_frames.append(extracted_df)
 
+        # Combine all data frames into a single DataFrame
         combined_data = pd.concat(data_frames, ignore_index=True)
 
+        # Perform operations on combined_data
         combined_data[['Sensor ID', 'Sensor Name']] = combined_data['Sensor Info'].apply(ExtractingFiles.split_sensor_info)
-        combined_data = combined_data.drop('Sensor Info',axis=1)
+        combined_data = combined_data.drop('Sensor Info', axis=1)
 
         return combined_data
     
