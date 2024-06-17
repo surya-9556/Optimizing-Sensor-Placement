@@ -12,7 +12,6 @@ extract_files = extracting_files.ExtractingFiles()
 neural_network = neural_networks.NeuralNetwork()
 
 placement_json = os.getenv('placement_json')
-sensor_data = os.getenv("folder_name")
 column_name = os.getenv('column_name')
 
 # Read the JSON file containing placement data
@@ -24,13 +23,11 @@ keys_list = list(data.keys())
 
 class OptimizingPlacement:
     @staticmethod
-    def extracting_files(file_name):
+    def extracting_files(file_name, sensor_data):
 
         if file_name.endswith('.zip'):
             # Extract the zip file containing sensor data
             extract_files.extract_zip(file_name, sensor_data)
-
-            # filename_without_extension = file_name.split('.')[0]
 
             # Read all Excel files from the extracted folder
             initial_data = extract_files.read_all_excel_files(sensor_data)

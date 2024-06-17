@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Result</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Upload Result</h1>
+        <div class="mt-3">
+            <!-- <p>Status: {{ result.Status }}</p>
+            <p>Message: {{ result.Message }}</p>
+            {% if result.File_size %}
+            <p>File Size: {{ result.File_size }} bytes</p>
+            {% endif %} -->
+            {% if result.Head_of_DataFrame %}
+            <h4>Head of DataFrame</h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        {% for column in result.Head_of_DataFrame.keys() %}
+                        <th>{{ column }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in result.Head_of_DataFrame.values() | list | first %}
+                    <tr>
+                        {% for column in result.Head_of_DataFrame.keys() %}
+                        <td>{{ result.Head_of_DataFrame[column][loop.index0] }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+        <a href="/" class="btn btn-primary mt-3">Go Back</a>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

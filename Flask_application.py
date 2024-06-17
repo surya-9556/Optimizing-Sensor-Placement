@@ -3,9 +3,9 @@ from main import OptimizingPlacement
 from flask_bootstrap import Bootstrap
 from flask_scss import Scss
 from dotenv import load_dotenv
-from tempfile import NamedTemporaryFile
+from werkzeug.utils import secure_filename
+import pandas as pd
 import os
-import json
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -14,6 +14,8 @@ app = Flask(__name__)
 Bootstrap(app)
 Scss(app, static_dir='static/css', asset_dir='static/scss')
 
+placement = OptimizingPlacement()
+
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
@@ -21,51 +23,41 @@ def index():
 @app.route('/upload', methods=['POST'])
 def reading_file():
     if 'file' not in request.files:
-        response = make_response(jsonify({'Message': 'No file part in the request'}), 400)
-        response_data = response.get_json()
-        response_data['Status'] = response.status_code
-        response.set_data(json.dumps(response_data))
-        return response
-    
+        response = {'Message': 'No file part in the request', 'Status': 400}
+        return render_template('upload.html', result=response)
+
     file = request.files['file']
 
     if file.filename == '':
-        response = make_response(jsonify({'Message': 'No selected file'}), 400)
-        response_data = response.get_json()
-        response_data['Status'] = response.status_code
-        response.set_data(json.dumps(response_data))
-        return response
+        response = {'Message': 'No selected file', 'Status': 400}
+        return render_template('upload.html', result=response)
     
-    # Save the file to a temporary location
-    temp_file = NamedTemporaryFile(delete=False)
-    file.save(temp_file.name)
-    file_path = temp_file.name
+    # Secure the filename and save the file locally
+    filename = secure_filename(file.filename)
+    save_path = os.path.join('Uploads', filename)
+    os.makedirs('Uploads', exist_ok=True)
+    file.save(save_path)
 
-    print(f'path name: {file_path}')
+    print(f'File saved to: {save_path}')
 
-    # Perform operations with OptimizingPlacement class
-    placement = OptimizingPlacement()
-    result_head = placement.extracting_files(file_path)
-    
-    # Delete the temporary file
-    os.remove(file_path)
+    try:
+        # Perform operations with OptimizingPlacement class
+        result_head, keylist = placement.extracting_files(save_path, 'Uploads/Sensor Data')
 
-    if result_head is not None:
-        response = make_response(jsonify({
-            'Message': 'File successfully uploaded',
-            'File_size': os.path.getsize(file_path),
-            'Head_of_DataFrame': result_head.to_dict()
-        }), 200)
-    else:
-        response = make_response(jsonify({
-            'Message': 'Error processing file'
-        }), 500)
+        if isinstance(result_head, pd.DataFrame):
+            response = {
+                'Message': 'File successfully uploaded',
+                'File_size': os.path.getsize(save_path),
+                'Head_of_DataFrame': result_head.head().to_dict(),
+                'Status': 200
+            }
+
+        else:
+            response = {'Message': 'Error processing file', 'Status': 500}
+    except Exception as e:
+        response = {'Message': str(e), 'Status': 500}
     
-    response_data = response.get_json()
-    response_data['Status'] = response.status_code
-    response.set_data(json.dumps(response_data))
-    
-    return response
+    return render_template('upload.html', result=response)
 
 if __name__ == '__main__':
     app.run(debug=True)
