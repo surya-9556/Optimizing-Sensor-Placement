@@ -9,3 +9,4 @@ openpyxl
 python-dotenv
 Flask-Bootstrap 
 Flask-SCSS
+scikit-image

@@ -36,6 +36,7 @@ anomalies/
 Compare/
 *.csv
 Uploads/
+reconstructed_heatmaps/
 # *.avi
 
 # PyInstaller

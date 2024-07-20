@@ -26,7 +26,7 @@ class VideoGeneration:
             sensor_id_matrix = temp_dataset['Temperature'].values.reshape(8, num_sensors // 8)
 
             plt.figure(figsize=(10, 6))
-            sns.heatmap(sensor_id_matrix, annot=True, cmap="YlGnBu", fmt=".2f", cbar=False, xticklabels=False, yticklabels=False)
+            sns.heatmap(sensor_id_matrix, annot=False, cmap="YlGnBu", fmt=".2f", cbar=False, xticklabels=False, yticklabels=False)
             plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
 
             output_file = os.path.join(output_dir, f"heatmap_{i}.png")
@@ -42,7 +42,7 @@ class VideoGeneration:
         height, width, _ = frame.shape
 
         fourcc = cv2.VideoWriter_fourcc(*'DIVX')
-        video = cv2.VideoWriter(video_output, fourcc, 5.0, (width, height))
+        video = cv2.VideoWriter(video_output, fourcc, 24.0, (width, height))
 
         prev_frame = cv2.imread(frames[0])
 
