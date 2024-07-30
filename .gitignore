@@ -37,6 +37,8 @@ Compare/
 *.csv
 Uploads/
 reconstructed_heatmaps/
+sample.ipynb
+sample.py
 # *.avi
 
 # PyInstaller

@@ -37,11 +37,11 @@ class OptimizingPlacement:
         return combined_data, keys_list
     
     @staticmethod
-    def heatmap_video_gen(combined_data, output_dir, video_output):
+    def heatmap_video_gen(combined_data, output_dir, video_output, column):
         sample_dataset = combined_data.groupby(column_name).apply(lambda x: x.tail(100)).reset_index(drop=True)
         sample_dataset = extract_files.sorting_data(sample_dataset, keys_list)
 
-        frames = video_gen.frames_generation(sample_dataset, output_dir)
+        frames = video_gen.frames_generation(sample_dataset, output_dir, column)
 
         video_gen.video_generation(frames, video_output)
 
