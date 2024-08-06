@@ -67,35 +67,42 @@ class VideoGeneration:
         return f"Video saved as: {video_output}"
     
     def reconstructed_humidity_frames_generation(self, output_dir, reduced_df_sorted, data, column):
-
         if os.path.exists(output_dir):
             shutil.rmtree(output_dir)
 
         os.makedirs(output_dir)
 
         frames = []
+        sensor_id_to_filtered_value = []  # List to store (sensor_id, filtered_value) tuples
+
         for i in range(1, 101):
             temp_dataset = reduced_df_sorted.groupby('Sensor ID').nth(i - 1).reset_index()
 
             # Prepare the matrix
             rows, cols = 8, 7
-            sensor_matrix = np.zeros((rows, cols), dtype=float)  # Assuming temperature is a float
+            sensor_matrix = np.zeros((rows, cols), dtype=float)
 
-            # Populate the matrix
+            sensor_positions = {}  # To map sensor_id to their matrix position
             for sensor_id, (row, col) in data.items():
+                sensor_positions[sensor_id] = (rows - row, col - 1)
                 if sensor_id in temp_dataset['Sensor ID'].astype(str).values:
                     temp_value = temp_dataset[temp_dataset['Sensor ID'].astype(str) == sensor_id][column].values
                     if len(temp_value) > 0:
                         sensor_matrix[rows - row, col - 1] = temp_value[0]
 
             # Apply Gaussian filter
-            # sigma = 2  # Standard deviation for Gaussian kernel
             sigma = min(max(np.std(sensor_matrix), 1), 5)
             smoothed_data = gaussian_filter(sensor_matrix, sigma=sigma, mode='nearest')
 
             # Replace zeros with smoothed values
             filled_data = np.where(sensor_matrix == 0, smoothed_data, sensor_matrix)
 
+            # Map filtered values back to sensor_ids
+            for sensor_id, (row, col) in sensor_positions.items():
+                filtered_value = filled_data[row, col]
+                sensor_id_to_filtered_value.append({'Sensor ID': sensor_id, 'Filtered Value': filtered_value})
+
+            # Plot the heatmap
             plt.figure(figsize=(10, 6))
             sns.heatmap(filled_data, annot=False, cmap="YlGnBu", fmt=".2f", cbar=False, xticklabels=False, yticklabels=False)
             plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
@@ -106,9 +113,12 @@ class VideoGeneration:
 
             frames.append(output_file)
 
-        return frames
-    
-    def reconstructed_frames_generation(self, non_reduced_sensors, X_scaled, model, Optional_data, data, output_dir,column):
+        # Convert the list of sensor_id to filtered_value mappings to DataFrame
+        sensor_id_filtered_df = pd.DataFrame(sensor_id_to_filtered_value)
+
+        return frames, sensor_id_filtered_df
+
+    def reconstrucing_frames(self, model, not_reduced_df_sorted, reduced_df_sorted, output_dir, data,column):
 
         if os.path.exists(output_dir):
             shutil.rmtree(output_dir)
@@ -116,55 +126,45 @@ class VideoGeneration:
         os.makedirs(output_dir)
 
         frames = []
+        all_data = []
 
-        for i in range(1,101):
-            # 3. Prediction
-            predicted_data = non_reduced_sensors.groupby('Sensor ID',observed=False).nth(i - 1)[['Sensor ID',column]].reset_index()
+        for i in range(1, 101):
+            predicting_data = not_reduced_df_sorted.groupby('Sensor ID',observed=False).nth(i - 1)[['Sensor ID',column]].reset_index()
+            predicted_data_array = predicting_data[column].values.reshape(1, -1)
 
-            # Ensure that the 'Temperature' column is an array of shape (25,)
-            predicted_data_array = predicted_data[column].values.reshape(1, -1)
-
-            # Fit the scaler using the predicted_data_array to maintain consistency
             scaler1 = StandardScaler()
             predicted_scaled = scaler1.fit_transform(predicted_data_array)
 
-            # Pad the input to match the model's input shape
-            num_sensors = X_scaled.shape[1]
-            padding_length = num_sensors - predicted_scaled.shape[1]
-            padded_input = np.pad(predicted_scaled, ((0, 0), (0, padding_length)), mode='constant')
+            predictions = model.predict(predicted_scaled)
 
-            # Make predictions
-            predictions = model.predict(padded_input)
+            predicted_data = pd.DataFrame({"Sensor ID": predicting_data['Sensor ID'].unique(),
+                                    column:predictions[0]})
+            
+            sampled_Actual_data = reduced_df_sorted.groupby('Sensor ID').nth(i - 1)[['Sensor ID',column]]
+            merged_df = pd.merge(predicted_data,sampled_Actual_data,on=['Sensor ID',column], how='outer')
 
-            # Remove the padded part to keep the original length
-            predictions_trimmed = predictions[:, :predicted_data_array.shape[1]]
-
-            predicted_data = pd.DataFrame({"Sensor ID": predicted_data['Sensor ID'].unique(),
-                        column:predictions_trimmed[0]})
-            # print(predicted_data)
-            sample_data = Optional_data.groupby('Sensor ID',observed=False).nth(i - 1)[['Sensor ID',column]].reset_index()
-            sample_data = sample_data.drop('index',axis=1)
-
-            # Merge the DataFrames on 'Sensor ID'
-            merged_df = pd.merge(predicted_data, sample_data, on=['Sensor ID',column], how='outer')
             merged_df['Sensor ID'] = pd.Categorical(merged_df['Sensor ID'], categories=list(data.keys()), ordered=True)
-            reduced_df_sorted = merged_df.sort_values(by='Sensor ID')
-            reduced_df_sorted = reduced_df_sorted[~pd.isna(reduced_df_sorted['Sensor ID'])]
-            reduced_df_sorted['Sensor ID'] = reduced_df_sorted['Sensor ID'].astype(str)
-            reduced_df_sorted.reset_index(drop=True, inplace=True)
+            merged_df_sorted = merged_df.sort_values(by='Sensor ID')
+            merged_df_sorted = merged_df_sorted[~pd.isna(merged_df_sorted['Sensor ID'])]
+            merged_df_sorted['Sensor ID'] = merged_df_sorted['Sensor ID'].astype(str)
+            merged_df_sorted.reset_index(drop=True, inplace=True)
 
             # Reshape the DataFrame to an 8x7 matrix
-            matrix = reduced_df_sorted[column].values.reshape(8, 7)
+            matrix = merged_df_sorted[column].values.reshape(8, 7)
 
             # Plot the heatmap
             plt.figure(figsize=(10, 6))
             sns.heatmap(matrix, annot=False, fmt=".2f", cmap='YlGnBu', cbar=False, xticklabels=False, yticklabels=False)
             plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
-
+            # plt.show()
             output_file = os.path.join(output_dir, f"heatmap_{i}.png")
             plt.savefig(output_file)
             plt.close()
 
             frames.append(output_file)
 
-        return frames
+            all_data.append(merged_df_sorted)
+        
+        all_data = pd.concat(all_data,ignore_index=True)
+
+        return frames, all_data

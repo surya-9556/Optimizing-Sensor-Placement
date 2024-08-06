@@ -39,6 +39,7 @@ Uploads/
 reconstructed_heatmaps/
 sample.ipynb
 sample.py
+error_frames/
 # *.avi
 
 # PyInstaller
