@@ -3,37 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Upload</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <title>Optimizing Sensor Placement</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        body {
+            background-image: url('https://your-image-source.com/tech-background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .upload-wrapper {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+            color: #fff;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
+        .btn-primary i {
+            margin-right: 8px;
+        }
+        .custom-file-label::after {
+            content: "Browse";
+        }
+        .data-display, .action-buttons {
+            margin-top: 30px;
+        }
+        .action-buttons .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            color: #fff;
+            font-weight: 600;
+            border-radius: 5px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .action-buttons .btn-secondary:hover {
+            background-color: #5a6268;
+            border-color: #4e555b;
+        }
+        .table-responsive {
+            margin-top: 20px;
+        }
+        .alert {
+            display: none; /* Initially hidden */
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="mt-5">Upload a File</h1>
-        <form action="/upload" method="POST" enctype="multipart/form-data">
+    <div class="upload-wrapper">
+        <h1>Upload CSV File</h1>
+        <form action="/" method="POST" enctype="multipart/form-data">
             <div class="form-group">
-                <label for="file">Choose file</label>
-                <input type="file" class="form-control-file" id="file" name="file" required>
+                <label for="file">Choose CSV File</label>
+                <div class="input-group">
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" id="file" name="file" accept=".csv">
+                        <label class="custom-file-label" for="file">Choose file</label>
+                    </div>
+                    <div class="input-group-append">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="material-icons">cloud_upload</i> Upload
+                        </button>
+                    </div>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary">Upload</button>
         </form>
-
-        {% if result %}
-        <div class="mt-5">
-            <h3>Response</h3>
-            <p>Status: {{ result.Status }}</p>
-            <p>Message: {{ result.Message }}</p>
-            {% if result.File_size %}
-            <p>File Size: {{ result.File_size }} bytes</p>
-            {% endif %}
-            {% if result.Head_of_DataFrame %}
-            <h4>Head of DataFrame</h4>
-            <pre>{{ result.Head_of_DataFrame | tojson }}</pre>
-            {% endif %}
-        </div>
-        {% endif %}
     </div>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    {% if sample_data %}
+    <div class="upload-wrapper">
+        <div class="data-display">
+            <h2 class="text-center">Sample Data</h2>
+            <div class="table-responsive">
+                {{ sample_data|safe }}
+            </div>
+        </div>
+        <div class="action-buttons">
+            <a href="{{ url_for('calculate_stats', filename=filename) }}" class="btn btn-secondary btn-block">Calculate Stats</a>
+            <a href="{{ url_for('data_cleaning', filename=filename) }}" class="btn btn-secondary btn-block">Data Cleaning</a>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if filename %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <strong>Success!</strong> File "{{ filename }}" has been successfully uploaded.
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    {% endif %}
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var alertElement = document.querySelector('.alert');
+            if (alertElement) {
+                alertElement.style.display = 'block';
+                setTimeout(function() {
+                    alertElement.classList.remove('show');
+                }, 5000); // Hide after 5 seconds
+            }
+        });
+    </script>
 </body>
 </html>

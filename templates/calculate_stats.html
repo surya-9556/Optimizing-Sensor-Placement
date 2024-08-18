@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculate Stats</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center">Calculate Statistics</h1>
+        <form method="POST">
+            <div class="form-group">
+                <label for="column_name">Select Column:</label>
+                <select class="form-control" id="column_name" name="column_name">
+                    {% for col in columns %}
+                        <option value="{{ col }}">{{ col }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Calculate</button>
+        </form>
+
+        {% if stats %}
+            <h2 class="mt-4">Statistics</h2>
+            <div class="table-responsive">
+                {{ stats|safe }}
+            </div>
+
+            <h2 class="mt-4">Plots</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <h3>Histogram</h3>
+                    {% if hist_url %}
+                        <img src="{{ hist_url }}" class="img-fluid" alt="Histogram">
+                    {% else %}
+                        <p>No histogram available.</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-4">
+                    <h3>Box Plot</h3>
+                    {% if box_url %}
+                        <img src="{{ box_url }}" class="img-fluid" alt="Box Plot">
+                    {% else %}
+                        <p>No box plot available.</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-4">
+                    <h3>Density Plot</h3>
+                    {% if density_url %}
+                        <img src="{{ density_url }}" class="img-fluid" alt="Density Plot">
+                    {% else %}
+                        <p>No density plot available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+
+        <a href="{{ url_for('index', filename=filename) }}" class="btn btn-primary mt-3">Back to Upload</a>
+    </div>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

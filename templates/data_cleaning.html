@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Cleaning</title>
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <style>
+        .container {
+            margin-top: 20px;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .table-container {
+            margin-top: 20px;
+        }
+        .table-responsive {
+            position: relative;
+        }
+        .filter-container, .sort-container {
+            margin-bottom: 20px;
+        }
+        .filter-container input, .sort-container select {
+            width: 100%;
+        }
+        th {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Data Cleaning</h1>
+        
+        <form method="POST">
+            <div class="form-group">
+                <label for="action">Choose a Cleaning Action</label>
+                <select class="form-control" id="action" name="action">
+                    <option value="drop_na">Drop Rows with Missing Values</option>
+                    <option value="fill_na">Fill Missing Values</option>
+                    <option value="drop_duplicates">Drop Duplicate Rows</option>
+                    <option value="trim_whitespace">Trim Whitespace</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="fill_methods_group" style="display: none;">
+                <label>Fill Methods</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="mean" name="fill_method" value="mean">
+                    <label class="form-check-label" for="mean">Mean</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="median" name="fill_method" value="median">
+                    <label class="form-check-label" for="median">Median</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="mode" name="fill_method" value="mode">
+                    <label class="form-check-label" for="mode">Mode</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="zeros" name="fill_method" value="zeros">
+                    <label class="form-check-label" for="zeros">Zeros</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="custom" name="fill_method" value="custom">
+                    <label class="form-check-label" for="custom">Custom Value</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="interpolate" name="fill_method" value="interpolate">
+                    <label class="form-check-label" for="interpolate">Interpolate</label>
+                </div>
+                <div class="form-group" id="custom_value_group" style="display: none;">
+                    <label for="custom_value">Custom Value</label>
+                    <input type="text" class="form-control" id="custom_value" name="custom_value" value="0">
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Apply</button>
+        </form>
+        
+        <div class="table-container mt-4">
+            {% if cleaned_data %}
+            <h2 class="text-center">Cleaned Data</h2>
+            <div class="filter-container">
+                <input type="text" id="filter-input" class="form-control" placeholder="Filter data...">
+            </div>
+            <div class="table-responsive" id="data-table">
+                {{ cleaned_data|safe }}
+            </div>
+            <div class="alert alert-info mt-3">
+                <h4 class="alert-heading">Cleaning Steps</h4>
+                <ul>
+                    {% for step in steps %}
+                    <li>{{ step }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <button class="btn btn-success mt-3" id="download-btn">Download Cleaned Data</button>
+            {% else %}
+            <p class="text-center">No cleaned data available. Please perform a cleaning action.</p>
+            {% endif %}
+        </div>
+
+        <a href="{{ url_for('index', filename=filename) }}" class="btn btn-primary mt-3">Back to Upload</a>
+    </div>
+
+    <!-- Bootstrap JS (optional) -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8sh+2ggmWwoGpk/iqY4zr1h+qn0Q5stwEULTy0" crossorigin="anonymous"></script>
+    <!-- Custom JS to toggle input fields and handle sorting/filtering -->
+    <script>
+        document.getElementById('action').addEventListener('change', function() {
+            var fillMethodsGroup = document.getElementById('fill_methods_group');
+            var customValueGroup = document.getElementById('custom_value_group');
+            if (this.value === 'fill_na') {
+                fillMethodsGroup.style.display = 'block';
+            } else {
+                fillMethodsGroup.style.display = 'none';
+                customValueGroup.style.display = 'none';
+            }
+        });
+
+        document.getElementById('custom').addEventListener('change', function() {
+            var customValueGroup = document.getElementById('custom_value_group');
+            customValueGroup.style.display = this.checked ? 'block' : 'none';
+        });
+
+        // Column-specific filtering logic
+        document.getElementById('filter-input').addEventListener('input', function() {
+            var filterValue = this.value.toLowerCase();
+            var table = document.querySelector('#data-table table');
+            if (!table) return;
+
+            var rows = table.querySelectorAll('tbody tr');
+            rows.forEach(function(row) {
+                var cells = row.querySelectorAll('td');
+                var rowMatches = Array.from(cells).some(function(cell) {
+                    return cell.textContent.toLowerCase().includes(filterValue);
+                });
+                row.style.display = rowMatches ? '' : 'none';
+            });
+        });
+
+        // Column-specific sorting logic
+        document.querySelectorAll('#data-table th').forEach((header, index) => {
+            header.addEventListener('click', () => {
+                sortTable(index);
+            });
+        });
+
+        function sortTable(columnIndex) {
+            var table = document.querySelector('#data-table table');
+            if (!table) return;
+
+            var rows = Array.from(table.querySelectorAll('tbody tr'));
+            var sortOrder = header.getAttribute('data-sort') === 'asc' ? 'desc' : 'asc';
+            header.setAttribute('data-sort', sortOrder);
+
+            rows.sort((a, b) => {
+                var aText = a.querySelectorAll('td')[columnIndex].textContent.trim().toLowerCase();
+                var bText = b.querySelectorAll('td')[columnIndex].textContent.trim().toLowerCase();
+                return sortOrder === 'asc' ? aText.localeCompare(bText) : bText.localeCompare(aText);
+            });
+
+            var tbody = table.querySelector('tbody');
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // CSV download logic
+        document.getElementById('download-btn').addEventListener('click', function() {
+            var table = document.querySelector('#data-table table');
+            if (!table) return;
+
+            var headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent).join(',');
+            var rows = Array.from(table.querySelectorAll('tbody tr')).map(row => {
+                return Array.from(row.querySelectorAll('td')).map(td => td.textContent).join(',');
+            }).join('\n');
+
+            var csvContent = headers + '\n' + rows;
+            var blob = new Blob([csvContent], { type: 'text/csv' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'cleaned_data.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+    </script>
+</body>
+</html>

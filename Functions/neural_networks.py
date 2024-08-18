@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import matplotlib.pyplot as plt
 import keras as ker
 
 class NeuralNetwork:
@@ -48,6 +49,25 @@ class NeuralNetwork:
         X, y = self.create_sequences(feature_data, n_steps)
         input_shape = (X.shape[1],)
         model = self.build_model(input_shape)
-        model.fit(X, y, epochs=20, batch_size=32, validation_split=0.3)
+        # model.fit(X, y, epochs=20, batch_size=32, validation_split=0.3)
+        # Fit model and store history
+        history = model.fit(X, y, epochs=20, batch_size=32, validation_split=0.3)
+
+        # Normalize the losses
+        train_loss = np.array(history.history['loss'])
+        # val_loss = np.array(history.history['val_loss'])
+        normalized_train_loss = train_loss / train_loss[0]
+        # normalized_val_loss = val_loss / val_loss[0]
+
+        # Plot the losses
+        plt.figure(figsize=(10, 6))
+        plt.plot(normalized_train_loss, label='Training Loss')
+        # plt.plot(normalized_val_loss, label='Validation Loss')
+        plt.title(f'Normalized MSE Loss over Epochs for {feature_name}')
+        plt.xlabel('Epochs')
+        plt.ylabel('Normalized MSE Loss')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
         filled_data = self.fill_missing_values(data, model, feature_name, n_steps)
         return filled_data
