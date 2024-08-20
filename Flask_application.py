@@ -12,27 +12,44 @@ import os
 # Load environment variables from a .env file
 load_dotenv()
 
+# Initialize the Flask application and Bootstrap for styling
 app = Flask(__name__)
 Bootstrap(app)
 
-# Set the folder for uploaded files
+# Set the folder where uploaded files will be stored
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Allowed extensions for file upload
+# Define the allowed file extensions for uploads
 ALLOWED_EXTENSIONS = {'csv'}
 
 def allowed_file(filename):
+    """
+    Check if the uploaded file has an allowed extension.
+
+    Parameters:
+    - filename: Name of the uploaded file.
+
+    Returns:
+    - Boolean indicating whether the file has an allowed extension.
+    """
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    """
+    Handle the file upload and display the first few rows of the uploaded CSV.
+
+    Returns:
+    - Renders the index.html template with a sample of the uploaded data.
+    """
     sample_data = None
     filename = request.args.get('filename')
     
     if filename:
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         if os.path.exists(filepath):
+            # Read the CSV file and display the first few rows as an HTML table
             df = pd.read_csv(filepath)
             sample_data = df.head().to_html(classes='table table-striped', index=False)
 
@@ -50,6 +67,7 @@ def index():
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
 
+            # Read the uploaded CSV file and display the first few rows
             df = pd.read_csv(filepath)
             sample_data = df.head().to_html(classes='table table-striped', index=False)
             
@@ -59,6 +77,12 @@ def index():
 
 @app.route('/calculate_stats', methods=['GET', 'POST'])
 def calculate_stats():
+    """
+    Calculate and display statistics, histograms, box plots, and density plots for a selected column in the uploaded CSV file.
+
+    Returns:
+    - Renders the calculate_stats.html template with calculated statistics and plots.
+    """
     filename = request.args.get('filename')
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     df = pd.read_csv(filepath)
@@ -73,7 +97,7 @@ def calculate_stats():
         selected_column = request.form.get('column_name')
         if selected_column in df.columns:
             column_data = df[selected_column]
-            # Calculate various statistics
+            # Calculate various statistics for the selected column
             stats_df = pd.DataFrame({
                 'Count': [column_data.count()],
                 'Mean': [column_data.mean()],
@@ -89,10 +113,10 @@ def calculate_stats():
                 'Kurtosis': [column_data.kurtosis()]
             })
 
-            # Convert the DataFrame to HTML for rendering
+            # Convert the statistics DataFrame to HTML for display
             stats = stats_df.to_html(classes='table table-striped', index=False)
             
-            # Generate Histogram
+            # Generate and encode a histogram plot
             fig, ax = plt.subplots()
             sns.histplot(column_data, kde=False, ax=ax)
             ax.set_title('Histogram of ' + selected_column)
@@ -104,7 +128,7 @@ def calculate_stats():
             hist_image.seek(0)
             hist_url = base64.b64encode(hist_image.getvalue()).decode('utf-8')
             
-            # Generate Box Plot
+            # Generate and encode a box plot
             fig, ax = plt.subplots()
             sns.boxplot(x=column_data, ax=ax)
             ax.set_title('Box Plot of ' + selected_column)
@@ -115,7 +139,7 @@ def calculate_stats():
             box_image.seek(0)
             box_url = base64.b64encode(box_image.getvalue()).decode('utf-8')
             
-            # Generate Density Plot
+            # Generate and encode a density plot
             fig, ax = plt.subplots()
             sns.kdeplot(column_data, ax=ax)
             ax.set_title('Density Plot of ' + selected_column)
@@ -137,8 +161,15 @@ def calculate_stats():
         box_url='data:image/png;base64,' + box_url if box_url else None,
         density_url='data:image/png;base64,' + density_url if density_url else None
     )
+
 @app.route('/data_cleaning', methods=['GET', 'POST'])
 def data_cleaning():
+    """
+    Handle data cleaning tasks such as dropping missing values, filling missing values, dropping duplicates, and trimming whitespace.
+
+    Returns:
+    - Renders the data_cleaning.html template with the cleaned data and available cleaning steps.
+    """
     filename = request.args.get('filename')
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     df = pd.read_csv(filepath)
@@ -152,6 +183,7 @@ def data_cleaning():
             df_cleaned = df.dropna()
             cleaning_steps.append('Dropped rows with missing values.')
         elif action == 'fill_na':
+            # Handle various methods for filling missing values
             fill_methods = request.form.getlist('fill_method')
             for method in fill_methods:
                 if method == 'mean':
@@ -183,12 +215,12 @@ def data_cleaning():
             df_cleaned = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
             cleaning_steps.append('Trimmed whitespace from all string values.')
 
-        # Save the cleaned data
+        # Save the cleaned data to a new file
         cleaned_filename = 'cleaned_' + filename
         cleaned_filepath = os.path.join(app.config['UPLOAD_FOLDER'], cleaned_filename)
         df.to_csv(cleaned_filepath, index=False)
 
-        # Display the cleaned data
+        # Display the cleaned data as an HTML table
         cleaned_data = df.head().to_html(classes='table table-striped', index=False)
 
         return render_template('data_cleaning.html', cleaned_data=cleaned_data, filename=filename, steps=cleaning_steps, download_link=url_for('download_file', filename=cleaned_filename))
@@ -197,10 +229,20 @@ def data_cleaning():
 
 @app.route('/download/<filename>', methods=['GET'])
 def download_file(filename):
+    """
+    Provide a link to download the cleaned data file.
+
+    Parameters:
+    - filename: Name of the file to be downloaded.
+
+    Returns:
+    - Sends the file to the user as an attachment.
+    """
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     return send_file(filepath, as_attachment=True)
 
 if __name__ == '__main__':
+    # Ensure the upload folder exists before running the application
     if not os.path.exists(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
 

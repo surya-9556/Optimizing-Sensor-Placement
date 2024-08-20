@@ -10,3 +10,7 @@ python-dotenv
 Flask-Bootstrap 
 Flask-SCSS
 scikit-image
+opencv-python
+Werkzeug
+beautifulsoup4
+ipython
