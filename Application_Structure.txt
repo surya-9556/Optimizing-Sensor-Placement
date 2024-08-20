@@ -1,0 +1,28 @@
+
+Application Structure and Flow
+
+1. Main Script:
+   - The entire codebase is primarily written in a Jupyter notebook named `final_project.ipynb`.
+
+2. Code Organization:
+   - To ensure consistency and maintain readability, the project follows a specific structure:
+     1. `.env` File:
+        - Contains essential configurations such as dataset names, column names, and other key attributes.
+     2. `Functions` Folder:
+        - Includes all the necessary functions for data cleaning, optimization, and testing.
+        - Some functions are directly called in the `final_project.ipynb` file, while others are managed through the `main.py` file.
+     3. `sensor_placement.json` File:
+        - This file stores the sensor positions with their names, reflecting the actual locations.
+
+3. Testing with New Data:
+   - If you want to test the application with new data:
+     1. Ensure that the data is stored in a zipped file, with the files in `.xlsx` format, matching the structure of the original dataset.
+     2. Update the `.env` file with the location of the new data file to comply with company policy regarding secrets.
+
+4. Modifying the Data Format:
+   - If you need to change the data format and experiment with your own structure:
+     1. Modify the relevant code in the `Functions` folder, specifically within the `extracting_file.py` file.
+
+5. Important Notes:
+   - The dataset zip file can be located anywhere, but the file path must be specified in the `.env` file to adhere to the company's secrets management policy.
+   - The application’s structure may seem complex. Apologies for any difficulty in understanding it due to time constraints, as the code hasn't been fully adjusted for a smoother experience.
