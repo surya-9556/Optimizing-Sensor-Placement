@@ -1,0 +1,95 @@
+
+Application Structure and Flow
+==============================
+
+Main Script:
+------------
+The entire application is implemented in a Jupyter notebook named final_project.ipynb, which serves as the central hub for running and testing the code.
+
+Code Organization:
+-------------------
+To maintain clarity and organization, the project is divided into the following components:
+
+- .env File:
+  - Contains critical configurations such as dataset paths, column names, and other key attributes.
+  - This file is used to manage sensitive information and paths.
+
+- Functions Folder:
+  - Contains scripts with functions for various tasks:
+    - extracting_files.py: Functions for data extraction, reading, and sorting.
+    - neural_network.py: Functions for building, training, and predicting with neural networks.
+    - video_generation.py: Functions for analyzing video data and generating visualizations.
+    - anomaly_detection.py: Functions for detecting anomalies in data and models.
+    - Comparing_videos.py (under testing subfolder): Functions for comparing videos and conducting statistical analysis.
+
+- Optimizing_functions Folder:
+  - Contains scripts with optimization functions:
+    - alternative_method.py: Functions for standardizing, shuffling data, and training models.
+    - shannon_nyquist_theorem.py: Functions for applying the Nyquist theorem and analyzing frequency components in video data.
+
+- sensor_placement.json File:
+  - Stores information about the sensor locations and names, which reflect the actual sensor placements used in the analysis.
+
+Testing with New Data:
+-----------------------
+To test the application with new datasets:
+1. Ensure the new data is stored in a ZIP file with .xlsx files that match the structure of the original dataset.
+2. Update the .env file with the new data file path to ensure it aligns with the company's policy on secrets management.
+
+Modifying the Data Format:
+---------------------------
+To experiment with a different data format:
+- Modify the relevant code in the Functions folder, specifically within the extracting_files.py script, to handle the new data structure.
+
+Important Notes:
+----------------
+- The dataset ZIP file can be located in any directory, but the path must be specified in the .env file to adhere to the company's secrets management practices.
+- The application�s structure may appear complex due to time constraints and incomplete adjustments for a more seamless experience.
+
+Functions Structure:
+=====================
+1. Extract and Read Data
+-------------------------
+   - Extract Files (extracting_files.py):
+     - Extract data from ZIP files to a specified directory.
+   - Read Excel Files (extracting_files.py):
+     - Load data from Excel files and combine it into a single DataFrame.
+   - Sort Data (extracting_files.py):
+     - Organize the combined data by sensor ID or other relevant keys for further analysis.
+
+2. Preprocess Data
+-------------------
+   - Standardize Data (alternative_method.py):
+     - Normalize and standardize the data to ensure consistency across the dataset.
+   - Shuffle Data (alternative_method.py):
+     - Randomize the order of the data to prevent any biases during model training.
+
+3. Train Neural Network
+------------------------
+   - Build and Train Model (neural_network.py):
+     - Create a neural network model and train it using the preprocessed data.
+   - Predict Future Values (neural_network.py):
+     - Use the trained model to make predictions about future values based on historical data.
+
+4. Analyze Video Data
+----------------------
+   - Extract Frames (video_generation.py):
+     - Capture and convert individual frames from video files into grayscale for analysis.
+   - Compare Frames (Comparing_videos.py - under testing subfolder):
+     - Evaluate similarities between frames from different videos to assess content changes.
+   - Statistical Analysis (Comparing_videos.py - under testing subfolder):
+     - Perform statistical tests to analyze the differences or similarities between video frames.
+
+5. Apply Nyquist Theorem
+-------------------------
+   - Process Video with FFT (shannon_nyquist_theorem.py - under Optimizing_functions folder):
+     - Compute the Fast Fourier Transform (FFT) of video frames to analyze their frequency components.
+   - Read Video Data (shannon_nyquist_theorem.py - under Optimizing_functions folder):
+     - Convert video frames to grayscale and prepare them for FFT analysis.
+   - Analyze with Nyquist Theorem (shannon_nyquist_theorem.py - under Optimizing_functions folder):
+     - Perform frequency domain analysis using the FFT results to gain insights from the video data.
+
+6. Visualize Data
+------------------
+   - Generate Heatmaps (alternative_method.py):
+     - Create heatmaps to visualize prediction errors or other metrics over time for better interpretation and analysis.
