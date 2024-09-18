@@ -79,6 +79,7 @@ class ExtractingFiles:
             excel_files = glob.glob(os.path.join(file, '**', '*.xlsx*'), recursive=True)
 
             for excel_file in excel_files:
+                print('excel_file',excel_file)
                 xls = pd.ExcelFile(excel_file)  # Load the Excel file
                 for sheet_name in xls.sheet_names:
                     df = pd.read_excel(xls, sheet_name=sheet_name)  # Read each sheet
