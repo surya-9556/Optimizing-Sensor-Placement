@@ -24,7 +24,7 @@ keys_list = list(data.keys())
 
 class OptimizingPlacement:
     @staticmethod
-    def extracting_files(file_name, sensor_data):
+    def extracting_files(file_name = None, sensor_data = None):
         """
         Extracts files from a ZIP archive or directly reads Excel files.
         The function sorts and combines data, removing duplicates based on 'Time' and a specified column.
@@ -38,13 +38,17 @@ class OptimizingPlacement:
         - keys_list: List of keys extracted from the JSON data.
         """
 
-        if file_name.endswith('.zip'):
+        if file_name == None:
+            # If it's not a ZIP, read the Excel file directly
+            initial_data = extract_files.read_all_excel_files(sensor_data)
+
+        elif file_name.endswith('.zip'):
             # If the file is a ZIP archive, extract it
             extract_files.extract_zip(file_name, sensor_data)
             # Read all Excel files from the extracted contents
             initial_data = extract_files.read_all_excel_files(sensor_data)
-        else:
-            # If it's not a ZIP, read the Excel file directly
+            
+        elif file_name.endswith('.xlsx'):
             initial_data = extract_files.read_all_excel_files(file_name)
 
         # Sort the data based on the keys list
